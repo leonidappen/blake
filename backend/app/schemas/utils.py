@@ -9,12 +9,39 @@ from sqlalchemy.orm import interfaces
 #     print("Meow")
 #     return getattr(obj, resolve_info.field_name)
 
+
+def createSQLAlchemyFieldArguments(schema):
+    return {
+        "column": Argument(schema.enumUniqueColumns,
+                    description="Column to select from",
+                    required=True
+        ),
+        "value": Argument(String,
+                    description="Value to search for",
+                    required=True
+        )
+    }
+
+
+def SQLAlchemyFieldResolver(schema):
+    def resolver(self, info, **kwargs):
+        query = schema.get_query(info)
+        columns = schema.dictUniqueColumns
+
+        query = query.filter(
+            columns[kwargs.get("column")] == kwargs.get("value")
+        )
+
+        return query.one_or_none()
+    return resolver
+
+
 class OrderEnum(Enum):
     ASC = 0
     DESC = 1
 
 
-def createSQLAlchemyListArguments(schema, child=None, pagination=False):
+def createSQLAlchemyListArguments(schema, pagination=False):
     return {
         "limit": Argument(Int,
                         description="Limit list to x items"
@@ -80,12 +107,27 @@ class SQLAlchemyObjectTypeMeta(type):
                         if column not in cls._meta.fields.keys()
                 ]
             )
+
+        # TODO: Lazy...
+        cls.enumUniqueColumns = Enum("{}_uniquecolumns".format(cls.__name__),
+                [(column[0], count)
+                        for count, column in enumerate(inspect(cls._meta.model).columns.items())
+                            if column not in cls._meta.fields.keys() and (column[1].unique or column[1].primary_key)
+                ]
+            )
         
         # Create dict for model column objects -- for resolver
         cls.dictColumns = {
             count: column[1]
                 for count, column in enumerate(inspect(cls._meta.model).columns.items())
                     if column not in cls._meta.fields.keys()
+        }
+
+        # TODO: Lazy...
+        cls.dictUniqueColumns = {
+            count: column[1]
+                for count, column in enumerate(inspect(cls._meta.model).columns.items())
+                    if column not in cls._meta.fields.keys() and (column[1].unique or column[1].primary_key)
         }
 
         # Recreate the dynamic type (for relationship) to used custom arguments/resolver
@@ -97,7 +139,10 @@ class SQLAlchemyObjectTypeMeta(type):
                     if not schema_type:
                        return None
                     if relationship.direction is interfaces.MANYTOONE or not relationship.uselist:
-                         return Field(schema_type)
+                         return Field(schema_type,
+                            args=createSQLAlchemyFieldArguments(schema_type),
+                            resolver=SQLAlchemyFieldResolver(schema_type)
+                         )
                     else:
                         return List(schema_type,
                             args=createSQLAlchemyListArguments(schema_type),

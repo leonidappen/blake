@@ -1,6 +1,11 @@
 from graphene import Schema, ObjectType, Field, List, Int, String, Dynamic, Argument
 
-from .utils import SQLAlchemyObjectType, SQLAlchemyListResolver, createSQLAlchemyListArguments
+from .utils import (SQLAlchemyObjectType,
+                                        SQLAlchemyListResolver,
+                                        createSQLAlchemyListArguments,
+                                        SQLAlchemyFieldResolver,
+                                        createSQLAlchemyFieldArguments
+                                    )
 from app.models import Role, User
 
 
@@ -20,17 +25,20 @@ class Query(ObjectType):
         resolver=SQLAlchemyListResolver(RoleSchema)
     )
 
+    role = Field(RoleSchema,
+        args=createSQLAlchemyFieldArguments(RoleSchema),
+        resolver=SQLAlchemyFieldResolver(RoleSchema)
+    )
+
     users = List(UserSchema,
         args=createSQLAlchemyListArguments(UserSchema),
         resolver=SQLAlchemyListResolver(UserSchema)
     )
 
-    user = Field(UserSchema, id=Int(), name=String())
-
-    # TODO: Resolving by fields
-    def resolve_user(self, info, *args, **kwargs):
-        query = UserSchema.get_query(info)
-        return query.get(kwargs['id'])
+    user = Field(UserSchema,
+        args=createSQLAlchemyFieldArguments(UserSchema),
+        resolver=SQLAlchemyFieldResolver(UserSchema)
+    )
 
 
 schema = Schema(query=Query)
