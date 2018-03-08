@@ -41,7 +41,7 @@ class OrderEnum(Enum):
     DESC = 1
 
 
-def createSQLAlchemyListArguments(schema, pagination=False):
+def createSQLAlchemyListArguments(schema):
     return {
         "limit": Argument(Int,
                         description="Limit list to x items"
@@ -57,7 +57,13 @@ def createSQLAlchemyListArguments(schema, pagination=False):
                     ),
          "order_by": Argument(List(schema.enumColumns),
                         description="Columns to order by"
-                    )
+                    ),
+        "per_page": Argument(Int,
+                        description="Page size"
+                    ),
+        "page": Argument(Int,
+                        description="Page number"
+        )
     }
 
 
@@ -87,6 +93,11 @@ def SQLAlchemyListResolver(schema):
         limit = kwargs.get("limit", None)
         if limit:
             query = query.limit(limit)
+
+        per_page = kwargs.get("per_page", None)
+        page = kwargs.get("page", None)
+        if per_page and page:
+            query = query.limit(per_page).offset((page - 1) * per_page)
     
         return query.all()
     return resolver
