@@ -1,13 +1,11 @@
-from graphene import Schema, ObjectType, Field, List, Int, String, Dynamic, Argument
+from graphene import Schema, ObjectType
 
-from .utils import (SQLAlchemyObjectType,
-                                        SQLAlchemyListResolver,
-                                        createSQLAlchemyListArguments,
-                                        SQLAlchemyFieldResolver,
-                                        createSQLAlchemyFieldArguments
-                                    )
 from app.models import Role, User
-
+from .utils import (
+    SQLAlchemyObjectType,
+    SQLAlchemyList,
+    SQLAlchemyField
+)
 
 class UserSchema(SQLAlchemyObjectType):
     class Meta:
@@ -20,25 +18,11 @@ class RoleSchema(SQLAlchemyObjectType):
 
 
 class Query(ObjectType):
-    roles = List(RoleSchema,
-        args=createSQLAlchemyListArguments(RoleSchema),
-        resolver=SQLAlchemyListResolver(RoleSchema)
-    )
-
-    role = Field(RoleSchema,
-        args=createSQLAlchemyFieldArguments(RoleSchema),
-        resolver=SQLAlchemyFieldResolver(RoleSchema)
-    )
-
-    users = List(UserSchema,
-        args=createSQLAlchemyListArguments(UserSchema),
-        resolver=SQLAlchemyListResolver(UserSchema)
-    )
-
-    user = Field(UserSchema,
-        args=createSQLAlchemyFieldArguments(UserSchema),
-        resolver=SQLAlchemyFieldResolver(UserSchema)
-    )
+    roles = SQLAlchemyList(RoleSchema)
+    role = SQLAlchemyField(RoleSchema)
+    
+    users = SQLAlchemyList(UserSchema)
+    user = SQLAlchemyField(UserSchema)
 
 
 schema = Schema(query=Query)

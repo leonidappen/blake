@@ -1,28 +1,38 @@
-from graphene import Field, List, Dynamic, ObjectType, Int, Argument, Enum, String
+from graphene import (
+    ObjectType,
+    Argument,
+    Dynamic,
+    Field,
+    List,
+    Enum,
+    String,
+    Int
+)
 from graphene.utils.subclass_with_meta import SubclassWithMeta_Meta
 from graphene_sqlalchemy import SQLAlchemyObjectType as SQLAlchemyObjectTypeBase
-from graphene_sqlalchemy.registry import get_global_registry
 from sqlalchemy import inspect
 from sqlalchemy.orm import interfaces
 
-# def SQLAlchemyResolver(self, _, obj, resolve_info, *args, **kwargs):
-#     print("Meow")
-#     return getattr(obj, resolve_info.field_name)
 
-
+# Arguments to query by unique value
+# Values: are unique columns and primary keys (from model)
+# TODO: Rewrite it so the key: value is column: value instead of passing two arguments
 def createSQLAlchemyFieldArguments(schema):
     return {
-        "column": Argument(schema.enumUniqueColumns,
-                    description="Column to select from",
-                    required=True
+        "column": Argument(
+            schema.enumUniqueColumns,
+            description="Column to select from",
+            required=True
         ),
-        "value": Argument(String,
-                    description="Value to search for",
-                    required=True
+        "value": Argument(
+            String,
+            description="Value to search for",
+            required=True
         )
     }
 
 
+# Resolver to process arguments (See: createSQLAlchemyFieldArguments)
 def SQLAlchemyFieldResolver(schema):
     def resolver(self, info, **kwargs):
         query = schema.get_query(info)
@@ -36,39 +46,57 @@ def SQLAlchemyFieldResolver(schema):
     return resolver
 
 
+# Helper method for definine query root Fields
+def SQLAlchemyField(schema):
+    return Field(
+        schema,
+        args=createSQLAlchemyFieldArguments(schema),
+        resolver=SQLAlchemyFieldResolver(schema) 
+    )
+
+
+# SQLA Order Types
 class OrderEnum(Enum):
     ASC = 0
     DESC = 1
 
 
+# Arguments to query by SQLA functions
+# Values: .limit(int) (limit), .filter(col=val) (filter), .order_by(col=asc/desc) (order)
 def createSQLAlchemyListArguments(schema):
     return {
-        "limit": Argument(Int,
-                        description="Limit list to x items"
-                    ),
-        "filter": Argument(List(String),
-                        description="Value to filter by"
-                    ),
-        "filter_by": Argument(List(schema.enumColumns),
-                        description="Column to filter by"
-                    ),
-        "order": Argument(List(OrderEnum),
-                        description="Order query by"
-                    ),
-         "order_by": Argument(List(schema.enumColumns),
-                        description="Columns to order by"
-                    ),
-        "per_page": Argument(Int,
-                        description="Page size"
-                    ),
-        "page": Argument(Int,
-                        description="Page number"
+        "limit": Argument(
+            Int,
+            description="Limit list to x items"
+        ),
+        "filter": Argument(
+            List(String),
+            description="Value to filter by"
+        ),
+        "filter_by": Argument(
+            List(schema.enumColumns),
+            description="Column to filter by"
+        ),
+        "order": Argument(
+            List(OrderEnum),
+            description="Order query by"
+        ),
+         "order_by": Argument(
+            List(schema.enumColumns),
+            description="Columns to order by"
+        ),
+        "per_page": Argument(
+            Int,
+            description="Page size"
+        ),
+        "page": Argument(
+            Int,
+            description="Page number"
         )
     }
 
 
-# For resolving manytoone/manytomany relationships.
-# See "createSQLAlchemyListArguments" above for possible arguments
+# Resolver to process arguments (See: createSQLAlchemyListArguments)
 def SQLAlchemyListResolver(schema):
     def resolver(self, info, **kwargs):
         query = schema.get_query(info)
@@ -103,45 +131,56 @@ def SQLAlchemyListResolver(schema):
     return resolver
 
 
-# Metaclass for remapping the relationship object types.
-# This will allow for subqueries...
+# Helper method for definine query root Lists
+def SQLAlchemyList(schema):
+    return List(
+        schema,
+        args=createSQLAlchemyListArguments(schema),
+        resolver=SQLAlchemyListResolver(schema) 
+    )
+
+
+# Metaclass to update the graphene-sqlalchemy object type
 class SQLAlchemyObjectTypeMeta(type):
     def __init__(cls, name, bases, nmspc):
-
-        # TODO: Lazy fix to bypass...
+        # Hacky to pass meta on base class
         if name == "SQLAlchemyObjectType": return
 
-        # Create enum type for model columns
-        cls.enumColumns = Enum("{}_columns".format(cls.__name__),
-                [(column[0], count)
+        # Enum of Model columns names
+        cls.enumColumns = Enum(
+            "{}_columns".format(cls.__name__), [
+                (column[0], count)
                     for count, column in enumerate(inspect(cls._meta.model).columns.items())
                         if column not in cls._meta.fields.keys()
-                ]
-            )
+            ]
+        )
 
-        # TODO: Lazy...
-        cls.enumUniqueColumns = Enum("{}_uniquecolumns".format(cls.__name__),
-                [(column[0], count)
-                        for count, column in enumerate(inspect(cls._meta.model).columns.items())
-                            if column not in cls._meta.fields.keys() and (column[1].unique or column[1].primary_key)
-                ]
-            )
+        # Enum of unqiue Model columns names
+        # TODO: Probably can refactor this to make it a bit cleaner
+        cls.enumUniqueColumns = Enum(
+            "{}_uniquecolumns".format(cls.__name__), [
+                (column[0], count)
+                    for count, column in enumerate(inspect(cls._meta.model).columns.items())
+                        if column not in cls._meta.fields.keys() and (column[1].unique or column[1].primary_key)
+            ]
+        )
         
-        # Create dict for model column objects -- for resolver
+        # Dict of Model column objs
         cls.dictColumns = {
             count: column[1]
                 for count, column in enumerate(inspect(cls._meta.model).columns.items())
                     if column not in cls._meta.fields.keys()
         }
 
-        # TODO: Lazy...
+        # Dict of unique Model column objs
+        # TODO: Probably can refactor this to make it a bit cleaner
         cls.dictUniqueColumns = {
             count: column[1]
                 for count, column in enumerate(inspect(cls._meta.model).columns.items())
                     if column not in cls._meta.fields.keys() and (column[1].unique or column[1].primary_key)
         }
 
-        # Recreate the dynamic type (for relationship) to used custom arguments/resolver
+        # Recreate the dynamic type (for relationship) to used custom arguments/resolver defined above
         for field_name, obj in cls._meta.fields.items():
             if type(obj) is Dynamic:
                 def dynamic_type():
