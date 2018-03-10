@@ -15,7 +15,16 @@ def create_app(config_name):
 	register_blueprints(app)
 	register_commands(app)
 
-	app.add_url_rule('/graphql', view_func=GraphQLView.as_view('graphql', schema=schema, graphiql=True))
+	app.add_url_rule('/graphql',
+		view_func=GraphQLView.as_view(
+			'graphql',
+			schema=schema,
+			graphiql=True,
+			context={
+				"session": db.session
+			}
+		)
+	)
 
 	return app
 

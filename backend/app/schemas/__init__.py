@@ -1,28 +1,12 @@
 from graphene import Schema, ObjectType
 
-from app.models import Role, User
-from .utils import (
-    SQLAlchemyObjectType,
-    SQLAlchemyList,
-    SQLAlchemyField
-)
-
-class UserSchema(SQLAlchemyObjectType):
-    class Meta:
-        model = User
-
-
-class RoleSchema(SQLAlchemyObjectType):
-    class Meta:
-        model = Role
-
-
-class Query(ObjectType):
-    roles = SQLAlchemyList(RoleSchema)
-    role = SQLAlchemyField(RoleSchema)
+from .user import Query as UserQuery        
     
-    users = SQLAlchemyList(UserSchema)
-    user = SQLAlchemyField(UserSchema)
+
+class Query(UserQuery, ObjectType):
+    pass
 
 
-schema = Schema(query=Query)
+schema = Schema(
+    query=Query
+)
