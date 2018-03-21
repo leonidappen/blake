@@ -1,10 +1,10 @@
 from flask import Flask
-from flask_graphql import GraphQLView
 
 from app import commands, auth
 from app.settings import config
 from app.extensions import db, migrate, jwt, cors
 from app.schemas import schema
+from app.schemas.utils import GraphQLView
 
 
 def create_app(config_name):
