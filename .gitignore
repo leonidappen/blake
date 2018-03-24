@@ -105,3 +105,4 @@ migrations/
 
 # redis
 redis-stable/
+dump.rdb

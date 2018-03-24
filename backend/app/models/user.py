@@ -1,6 +1,7 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.extensions import db
+from .base import Base
 
 
 user_roles = db.Table("user_roles",
@@ -9,27 +10,19 @@ user_roles = db.Table("user_roles",
 	)
 
 
-class Role(db.Model):
-	__tablename__ = "roles"
-
-	id = db.Column(db.Integer(), primary_key=True)
+class Role(Base):
 	name = db.Column(db.Text, unique=True)
 
 	def __init__(self, name):
 		self.name = name
 
 
-class User(db.Model):
-	__tablename__ = "users"
-
-	id = db.Column(db.Integer(), primary_key=True)
+class User(Base):
 	email = db.Column(db.Text, unique=True)
 	username = db.Column(db.Text, unique=True)
 	password_hash = db.Column(db.Text)
-	active = db.Column(db.Boolean(), default=True)
-	created = db.Column(db.TIMESTAMP, default=db.func.now())
 	roles = db.relationship('Role', secondary=user_roles,
-		backref = db.backref('users', lazy='dynamic'))
+							backref = db.backref('users', lazy='dynamic'))
 
 	def __init__(self, email, password):
 		self.email = email
