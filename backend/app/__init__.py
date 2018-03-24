@@ -2,7 +2,7 @@ from flask import Flask
 
 from app import commands, auth
 from app.settings import config
-from app.extensions import db, migrate, jwt, cors
+from app.extensions import db, migrate, jwt, cors, celery
 from app.schemas import schema
 from app.schemas.utils import GraphQLView
 
@@ -34,12 +34,12 @@ def register_extensions(app):
 	migrate.init_app(app, db)
 	jwt.init_app(app)
 	cors.init_app(app, headers=['Content-Type','Authorization'])
-
+	celery.conf.update(app.config)
 
 def register_blueprints(app):
 	app.register_blueprint(auth.blueprint)
 
-
 def register_commands(app):
 	app.cli.add_command(commands.user)
 	app.cli.add_command(commands.role)
+	app.cli.add_command(commands.celery)
