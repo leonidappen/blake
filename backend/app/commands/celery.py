@@ -12,6 +12,7 @@ def celery():
     pass
 
 @celery.command()
+@with_appcontext
 def beat():
     beat = celery_beat.beat(app=celery_obj)
     beat.run()

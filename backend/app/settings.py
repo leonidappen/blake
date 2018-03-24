@@ -10,6 +10,7 @@ class Config:
 
 	# Celery
 	CELERYD_CONCURRENCY = 2
+	CELERYBEAT_SCHEDULER = "app.celery:DatabaseScheduler"
 
 
 class ProdConfig(Config):
