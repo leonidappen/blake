@@ -5,7 +5,7 @@ from app.extensions import jwt
 from app.models import User
 
 
-blueprint = Blueprint("auth", __name__, url_prefix="/auth")
+blueprint = Blueprint("auth", __name__)
 
 
 @jwt.user_loader_callback_loader
