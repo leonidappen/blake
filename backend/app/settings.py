@@ -7,6 +7,11 @@ class Config:
 
 	# Flask-JWT-Extended
 	JWT_SECRET_KEY = "Mew"
+	JWT_TOKEN_LOCATION = [ "headers", "cookies"]
+	JWT_ACCESS_COOKIE_PATH = "/"
+	JWT_REFRESH_COOKIE_PATH = "/token/refresh"
+	JWT_COOKIE_CSRF_PROTECT = True
+	JWT_CSRF_IN_COOKIES = False
 
 	# Celery
 	CELERYD_CONCURRENCY = 2
@@ -21,6 +26,9 @@ class ProdConfig(Config):
 	BROKER_URL = "redis://localhost:6379/0"
 	CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
 
+	# Flask-JWT-Extended
+	JWT_COOKIE_SECURE = True
+
 
 class StageConfig(Config):
 	# Flask
@@ -32,6 +40,9 @@ class StageConfig(Config):
 	# Celery
 	BROKER_URL = "redis://localhost:6379/1"
 	CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
+
+	# Flask-JWT-Extended
+	JWT_COOKIE_SECURE = False
 
 
 config = {
