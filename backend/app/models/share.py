@@ -1,6 +1,7 @@
-from app.extensions import db
+from sqlalchemy import Column, Text
+
 from .base import Base
 
 
 class Share(Base):
-    path = db.Column(db.Text, unique=True, nullable=False)
+    path = Column(Text, unique=True, nullable=False)

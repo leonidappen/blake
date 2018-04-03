@@ -1,28 +1,30 @@
+from sqlalchemy import Table, Column, ForeignKey, Integer, Text
+from sqlalchemy.orm import backref, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from app.extensions import db
-from .base import Base
+from .base import base, Base
 
 
-user_roles = db.Table("user_roles",
-	db.Column('user_id', db.Integer(), db.ForeignKey("users.id")),
-	db.Column('role_id', db.Integer(), db.ForeignKey("roles.id"))
+user_roles = Table("user_roles",
+	base.metadata,
+	Column('user_id', Integer(), ForeignKey("users.id")),
+	Column('role_id', Integer(), ForeignKey("roles.id"))
 	)
 
 
 class Role(Base):
-	name = db.Column(db.Text, unique=True)
+	name = Column(Text, unique=True)
 
 	def __init__(self, name):
 		self.name = name
 
 
 class User(Base):
-	email = db.Column(db.Text, unique=True)
-	username = db.Column(db.Text, unique=True)
-	password_hash = db.Column(db.Text)
-	roles = db.relationship('Role', secondary=user_roles,
-							backref = db.backref('users', lazy='dynamic'))
+	email = Column(Text, unique=True)
+	username = Column(Text, unique=True)
+	password_hash = Column(Text)
+	roles = relationship('Role', secondary=user_roles,
+							backref = backref('users', lazy='dynamic'))
 
 	def __init__(self, email, password):
 		self.email = email

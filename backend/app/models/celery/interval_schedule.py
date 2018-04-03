@@ -1,16 +1,18 @@
 from datetime import timedelta
 
+from sqlalchemy import Column, Integer, Text
 from celery import schedules
 
-from app.extensions import db
+# from app.extensions import db
+from ..base import base
 
 
-class IntervalSchedule(db.Model):
+class IntervalSchedule(base):
 	__tablename__ = "celery_intervals"
 
-	id = db.Column(db.Integer, primary_key=True)
-	every = db.Column(db.Integer, nullable=False)
-	period = db.Column(db.Text)
+	id = Column(Integer, primary_key=True)
+	every = Column(Integer, nullable=False)
+	period = Column(Text)
 
 	@property
 	def schedule(self):

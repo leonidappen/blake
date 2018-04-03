@@ -1,9 +1,10 @@
-from app.extensions import db
+from sqlalchemy import Column, Text, Integer
+
 from .base import Base
 
 
 class Project(Base):
-    name = db.Column(db.Text, nullable=False)
-    number = db.Column(db.Integer, nullable=False)
-    language = db.Column(db.Text, nullable=False)
-    coutry = db.Column(db.Text, nullable=False)
+    name = Column(Text, nullable=False)
+    number = Column(Integer, nullable=False)
+    language = Column(Text, nullable=False)
+    coutry = Column(Text, nullable=False)

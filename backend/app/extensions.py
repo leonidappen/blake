@@ -5,8 +5,9 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from celery import Celery
 
+from app.models.base import base
 
-db = SQLAlchemy()
+db = SQLAlchemy(model_class=base)
 migrate = Migrate()
 jwt = JWTManager()
 cors = CORS()

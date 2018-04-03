@@ -1,18 +1,20 @@
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy import Column, Integer, TIMESTAMP, Boolean, func
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
 
-from app.extensions import db
+
+base = declarative_base()
 
 
-class Base(db.Model):
+class Base(base):
     __abstract__ = True
     
     @declared_attr
     def __tablename__(cls):
         return "{}s".format(cls.__name__.lower())
 
-    id = db.Column(db.Integer(), primary_key=True)
-    created = db.Column(db.TIMESTAMP, default=db.func.now(),
+    id = Column(Integer, primary_key=True)
+    created = Column(TIMESTAMP, default=func.now(),
                             nullable=False)
-    modified = db.Column(db.TIMESTAMP, default=db.func.now(),
-                            onupdate=db.func.now(), nullable=False)
-    active = db.Column(db.Boolean, default=True, nullable=False)
+    modified = Column(TIMESTAMP, default=func.now(),
+                            onupdate=func.now(), nullable=False)
+    active = Column(Boolean, default=True, nullable=False)

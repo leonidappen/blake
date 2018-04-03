@@ -1,17 +1,19 @@
+from sqlalchemy import Column, Integer, Text
 from celery import schedules
 
-from app.extensions import db
+# from app.extensions import db
+from ..base import base
 
 
-class CrontabSchedule(db.Model):
+class CrontabSchedule(base):
 	__tablename__ = "celery_crontabs"
 
-	id = db.Column(db.Integer, primary_key=True)
-	minute = db.Column(db.Text, default="*")
-	hour = db.Column(db.Text, default="*")
-	day_of_week = db.Column(db.Text, default="*")
-	day_of_month = db.Column(db.Text, default="*")
-	month_of_year = db.Column(db.Text, default="*")
+	id = Column(Integer, primary_key=True)
+	minute = Column(Text, default="*")
+	hour = Column(Text, default="*")
+	day_of_week = Column(Text, default="*")
+	day_of_month = Column(Text, default="*")
+	month_of_year = Column(Text, default="*")
 	
 	@property
 	def schedule(self):
